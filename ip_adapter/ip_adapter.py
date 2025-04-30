@@ -223,7 +223,8 @@ class IPAdapterXL(IPAdapter):
 
     def generate(
         self,
-        pil_image,
+        clip_image_embeds=None,
+        pil_image=None,
         prompt=None,
         negative_prompt=None,
         scale=1.0,
@@ -234,7 +235,7 @@ class IPAdapterXL(IPAdapter):
     ):
         self.set_scale(scale)
 
-        num_prompts = 1 if isinstance(pil_image, Image.Image) else len(pil_image)
+        num_prompts = 1 
 
         if prompt is None:
             prompt = "best quality, high quality"
@@ -246,7 +247,8 @@ class IPAdapterXL(IPAdapter):
         if not isinstance(negative_prompt, List):
             negative_prompt = [negative_prompt] * num_prompts
 
-        image_prompt_embeds, uncond_image_prompt_embeds = self.get_image_embeds(pil_image)
+        image_prompt_embeds = self.image_proj_model(clip_image_embeds)
+        uncond_image_prompt_embeds = self.image_proj_model(torch.zeros_like(clip_image_embeds))
         bs_embed, seq_len, _ = image_prompt_embeds.shape
         image_prompt_embeds = image_prompt_embeds.repeat(1, num_samples, 1)
         image_prompt_embeds = image_prompt_embeds.view(bs_embed * num_samples, seq_len, -1)
